@@ -1,5 +1,3 @@
-package fr.dosook;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -41,9 +39,9 @@ public class DosRead {
      * @param data the array to print
      */
     public static void printIntArray(char[] data) {
-      /*
-        À compléter
-      */
+        for(char character : data) {
+            System.out.print(character+" ");
+        }
     }
 
     /**
@@ -70,6 +68,7 @@ public class DosRead {
             System.out.println("Usage: java DosRead <input_wav_file>");
             return;
         }
+
         final String wavFilePath = args[0];
 
         // Open the WAV file and read its header
@@ -119,9 +118,10 @@ public class DosRead {
         try {
             fileInputStream = new FileInputStream(path);
             fileInputStream.read(header);
-            /*
-              À compléter
-            */
+
+            this.sampleRate = byteArrayToInt(header, 24, 32); // Frequence  (4 octets) : Fréquence d'échantillonnage
+            this.bitsPerSample = byteArrayToInt(header, 34, 32); // BytePerBloc  (2 octets) : Nombre d'octets par bloc d'échantillonnage
+            this.dataSize = byteArrayToInt(header, 40, 32); // DataSize  (4 octets) : Nombre d'octets des données -> taille_du_fichier - taille_de_l'entête
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -138,12 +138,11 @@ public class DosRead {
         byte[] audioData = new byte[dataSize];
         try {
             fileInputStream.read(audioData);
+
+            audio = new double[0];
         } catch (IOException e) {
             e.printStackTrace();
         }
-        /*
-          À compléter
-        */
     }
 
     /**
