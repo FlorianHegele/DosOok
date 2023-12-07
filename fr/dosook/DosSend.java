@@ -67,7 +67,7 @@ public class DosSend {
     }
 
     public static void main(String[] args) {
-        // créé un objet fr.dosook.DosSend
+        // créé un objet DosSend
         DosSend dosSend = new DosSend("DosOok_message.wav");
         // lit le texte à envoyer depuis l'entrée standard
         // et calcule la durée de l'audio correspondant
