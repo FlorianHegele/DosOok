@@ -23,12 +23,12 @@ Le programme DosSend génère des signaux audio modulés en ASK à partir de fic
 
 # Exemple:
 
-Input :
+Input:
 ```bash
 java DosSend < ./helloWorld.txt
 ```
 
-Output :
+Output:
 ```
 Message : Hello World !
     Nombre de symboles : 13
@@ -36,16 +36,21 @@ Message : Hello World !
     Durée : 1.12 s
 ```
 
+<img src="http://info.iut-bm.univ-fcomte.fr/staff/perrot/DUT-INFO/S1/SAE/2023/_images/DosOok_message_zoom.png"/>
+
 ## DosRead - Programme Récepteur
 Le programme DosRead décode les signaux audio enregistrés, extrayant les données transmises. Il lit l'entête du fichier WAV, les données audio, et applique des filtres pour extraire le message. Enfin, il décode et affiche le message.
 
 Exemple:
 
-Input : 
+Input: 
 ```bash
 java DosRead ./message_DosOok.wav
 ```
 
+Filtre 1kHZ: 
+<img src="http://info.iut-bm.univ-fcomte.fr/staff/perrot/DUT-INFO/S1/SAE/2023/_images/HelloWorld_zoom_rectified.png"/>
+<img src="http://info.iut-bm.univ-fcomte.fr/staff/perrot/DUT-INFO/S1/SAE/2023/_images/HelloWorld_zoom_bits.png"/>
 Output:
 ```
 Message décodé : H e l l o   W o r l d   !
