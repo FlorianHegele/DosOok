@@ -1,3 +1,5 @@
+package fr.dosook;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -55,7 +57,7 @@ public class DosRead {
      */
     public static void displaySig(double[] sig, int start, int stop, String mode, String title) {
       /*
-        À compléter. Méthode a priori identique à sa version dans DosSend.
+        À compléter. Méthode a priori identique à sa version dans fr.dosook.DosSend.
       */
     }
 
@@ -65,7 +67,7 @@ public class DosRead {
      */
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.out.println("Usage: java DosRead <input_wav_file>");
+            System.out.println("Usage: java fr.dosook.DosRead <input_wav_file>");
             return;
         }
         String wavFilePath = args[0];

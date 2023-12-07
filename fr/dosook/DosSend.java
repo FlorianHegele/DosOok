@@ -1,15 +1,18 @@
+package fr.dosook;
+
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.List;
 import java.util.Scanner;
 
 public class DosSend {
-    final int FECH = 44100; // fréquence d'échantillonnage
-    final int FP = 1000;    // fréquence de la porteuses
-    final int BAUDS = 100;  // débit en symboles par seconde
-    final int FMT = 16;    // format des données
-    final int MAX_AMP = (1 << (FMT - 1)) - 1; // amplitude max en entier
-    final int CHANNELS = 1; // nombre de voies audio (1 = mono)
-    final int[] START_SEQ = {1, 0, 1, 0, 1, 0, 1, 0}; // séquence de synchro au début
+    static final int FECH = 44100; // fréquence d'échantillonnage
+    static final int FP = 1000;    // fréquence de la porteuses
+    static final int BAUDS = 100;  // débit en symboles par seconde
+    static final int FMT = 16;    // format des données
+    static final int MAX_AMP = (1 << (FMT - 1)) - 1; // amplitude max en entier
+    static final int CHANNELS = 1; // nombre de voies audio (1 = mono)
+    static final int[] START_SEQ = {1, 0, 1, 0, 1, 0, 1, 0}; // séquence de synchro au début
     final Scanner input = new Scanner(System.in); // pour lire le fichier texte
 
     long taille;                // nombre d'octets de données à transmettre
@@ -64,7 +67,7 @@ public class DosSend {
     }
 
     public static void main(String[] args) {
-        // créé un objet DosSend
+        // créé un objet fr.dosook.DosSend
         DosSend dosSend = new DosSend("DosOok_message.wav");
         // lit le texte à envoyer depuis l'entrée standard
         // et calcule la durée de l'audio correspondant
@@ -149,6 +152,7 @@ public class DosSend {
         /*
             À compléter
         */
+        return -1;
     }
 
     /**
@@ -161,6 +165,8 @@ public class DosSend {
         /*
              À compléter
         */
+
+        return new byte[1];
     }
 
     /**
