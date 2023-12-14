@@ -1,7 +1,6 @@
-package fr.dosook;
-
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -69,6 +68,7 @@ public class DosSend {
     public static void main(String[] args) {
         // créé un objet DosSend
         DosSend dosSend = new DosSend("DosOok_message.wav");
+        dosSend.charToBits(new char[]{'A','Z','E','R','T','Y'});
         // lit le texte à envoyer depuis l'entrée standard
         // et calcule la durée de l'audio correspondant
         dosSend.duree = (double) (dosSend.readTextData() + dosSend.START_SEQ.length / 8) * 8.0 / dosSend.BAUDS;
@@ -162,11 +162,18 @@ public class DosSend {
      * @return byte array containing only 0 & 1
      */
     public byte[] charToBits(char[] chars) {
-        /*
-             À compléter
-        */
+        byte[] by = new byte[chars.length];
 
-        return new byte[1];
+        for (int i = 0; i < chars.length; i++) {
+            by[i] = (byte) chars[i];
+        }
+
+        for (byte element : by) {
+            System.out.print(element + " ");
+        }
+        System.out.println();
+
+        return by;
     }
 
     /**
@@ -175,8 +182,8 @@ public class DosSend {
      * @param bits the data to modulate
      */
     public void modulateData(byte[] bits) {
-        /*
-            À compléter
-        */
+        int nombreDeSymbole = FECH / BAUDS;
+        int symboleTotal = bits.length * nombreDeSymbole;
+
     }
 }
