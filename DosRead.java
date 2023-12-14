@@ -72,7 +72,7 @@ public class DosRead {
         final double yPadding = 1.5;
 
         StdDraw.setCanvasSize(1280, 700);
-        StdDraw.setYscale(min(sig) * yPadding, max(sig) * yPadding);
+        StdDraw.setYscale(ArrayUtil.min(sig) * yPadding, ArrayUtil.max(sig) * yPadding);
         StdDraw.setXscale(-(sig.length * xPadding - sig.length), sig.length * xPadding);
 
         if(mode.equals("line")) {
@@ -274,25 +274,5 @@ public class DosRead {
         }
     }
 
-    public static double min(double[] arr) {
-        double min = arr[0];
 
-        for(int i=1; i<arr.length; i++) {
-            final double x = arr[i];
-            if(min > x) min = x;
-        }
-
-        return min;
-    }
-
-    public static double max(double[] arr) {
-        double max = arr[0];
-
-        for(int i=1; i<arr.length; i++) {
-            final double x = arr[i];
-            if(max < x) max = x;
-        }
-
-        return max;
-    }
 }
