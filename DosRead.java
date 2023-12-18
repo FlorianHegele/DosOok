@@ -73,7 +73,7 @@ public class DosRead {
 
         StdDraw.setCanvasSize(1280, 700);
         StdDraw.setYscale(ArrayUtil.min(sig) * yPadding, ArrayUtil.max(sig) * yPadding);
-        StdDraw.setXscale(-(sig.length * xPadding - sig.length), sig.length * xPadding);
+        StdDraw.setXscale(Math.min(0, -(sig.length * xPadding - sig.length)), sig.length * xPadding);
 
         if(mode.equals("line")) {
             for(int i=1; i<sig.length; i++) {
@@ -109,21 +109,25 @@ public class DosRead {
 
         // Read the audio data
         dosRead.readAudioDouble();
-        System.out.println(Arrays.toString(dosRead.audio));
 
-        displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
+        //displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
 
 
         // reverse the negative values
         dosRead.audioRectifier();
+        //displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
         //System.out.println(Arrays.toString(dosRead.audio));
 
         // apply a low pass filter
         dosRead.audioLPFilter(44);
+        displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
+
         //System.out.println(Arrays.toString(dosRead.audio));
 
         // Resample audio data and apply a threshold to output only 0 & 1
-        dosRead.audioResampleAndThreshold(dosRead.sampleRate / BAUDS, 12000);
+        dosRead.audioResampleAndThreshold(dosRead.sampleRate / BAUDS, 9000);
+        System.out.println(Arrays.toString(dosRead.outputBits));
+
         //System.out.println(Arrays.toString(dosRead.audio));
 
         dosRead.decodeBitsToChar();
@@ -132,7 +136,7 @@ public class DosRead {
             printIntArray(dosRead.decodedChars);
         }
 
-//        displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
+        //displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
 
         // Close the file input stream
         try {
@@ -204,15 +208,22 @@ public class DosRead {
      * @param n the number of samples to average
      */
     public void audioLPFilter(int n) {
-        final double fc = (1.0 / (2.0 * n)) * sampleRate;
-        final double alpha = 2.0 * Math.PI * fc / sampleRate;
-        final double coeff = 1.0 / (1.0 + Math.sin(alpha));
+        double[] filteredAudio = new double[audio.length];
 
-        for (int i = 0; i < audio.length; i++) {
-            audio[i] = (i == 0)
-                    ? audio[i]
-                    : coeff * (audio[i - 1] + audio[i] - audio[i - 1]);
+        for (int i = 0; i < filteredAudio.length; i++) {
+            // Calculer la moyenne glissante
+            double somme = 0;
+            final int debut = Math.max(0, i - n + 1);
+            int fin = i + 1;
+            for (int j = debut; j < fin; j++) {
+                somme += audio[j];
+            }
+
+            // Appliquer la moyenne
+            filteredAudio[i] = somme / (fin - debut);
         }
+
+        audio = filteredAudio;
     }
 
 
@@ -224,26 +235,21 @@ public class DosRead {
      * @param threshold the threshold that separates 0 and 1
      */
     public void audioResampleAndThreshold(int period, int threshold) {
-        final int newLength = audio.length / period;
-        final double[] resampledAudio = new double[newLength];
+        int numSymbols = audio.length / period;
+        outputBits = new int[numSymbols];
 
-        for (int i = 0; i < newLength; i++) {
-            final int start = i * period;
-            final int end = Math.min((i + 1) * period, audio.length);
-
-            // Calcul de la moyenne sur la période actuelle
+        for (int i = 0; i < numSymbols; i++) {
             double sum = 0;
-            for (int j = start; j < end; j++)
-                sum += audio[j];
+            for (int j = 0; j < period; j++) {
+                sum += audio[i * period + j];
+            }
+            double average = sum / period;
 
-
-            final double average = sum / (end - start);
-
-            // Appliquer le seuil et convertir en 0 ou 1
-            resampledAudio[i] = (average >= threshold) ? 1 : 0;
+            // Apply threshold to determine the bit value
+            System.out.println(average);
+            outputBits[i] = (average > threshold) ? 1 : 0;
         }
 
-        audio = resampledAudio;
     }
 
     /**
@@ -252,26 +258,7 @@ public class DosRead {
      * The next first symbol is the first bit of the first char.
      */
     public void decodeBitsToChar() {
-        int decal = -1;
-
-        for(int i=0; i<audio.length; i++) {
-            for(int j=0; j<START_SEQ.length; j++) {
-                if(audio[i] != START_SEQ[j]) break;
-
-                if(j+1 == START_SEQ.length) decal = i;
-                i++;
-            }
-        }
-
-        if (decal == -1) {
-            System.out.println("START_SEQ NOT FOUND");
-            return;
-        }
-
-        decodedChars = new char[audio.length - decal];
-        for(int i=decal; i<audio.length; i++) {
-            decodedChars[i] = (char)audio[i];
-        }
+        return;
     }
 
 

@@ -1,5 +1,9 @@
 public class ArrayUtil {
 
+    private ArrayUtil() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static double min(double[] arr) {
         double min = arr[0];
 
@@ -20,6 +24,10 @@ public class ArrayUtil {
         }
 
         return max;
+    }
+
+    public static int getSequenceIndex() {
+        return -1;
     }
 
 }
