@@ -227,7 +227,7 @@ public class DosSend {
      * @param bits the data to modulate
      */
     public void modulateData(byte[] bits){
-        int nbValues = (int) (FECH / BAUDS);
+        int nbValues = (FECH / BAUDS);
         int seqLength = START_SEQ.length * nbValues;
         dataMod = new double[seqLength + bits.length * nbValues];
 

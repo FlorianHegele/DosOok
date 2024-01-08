@@ -285,11 +285,21 @@ public class DosRead {
      * @return the index of the start sequence, or -1 if not found.
      */
     private int findStartSequenceIndex() {
-        for (int i = 0; i < outputBits.length - START_SEQ.length + 1; i++) {
-            if (Arrays.equals(Arrays.copyOfRange(outputBits, i, i + START_SEQ.length), START_SEQ)) {
-                return i + START_SEQ.length;
+        int limit = outputBits.length - START_SEQ.length + 1;
+
+        outerLoop:
+        for (int i = 0; i < limit; i++) {
+            int endIndex = i + START_SEQ.length;
+
+            for (int j = i, k = 0; j < endIndex; j++, k++) {
+                if (outputBits[j] != START_SEQ[k]) {
+                    continue outerLoop;
+                }
             }
+
+            return endIndex;
         }
+
         return -1;
     }
 
