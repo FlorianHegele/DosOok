@@ -1,14 +1,14 @@
 public class BitConversion {
 
-    // Fonction pour convertir un caractère en tableau de 8 bits
     public static byte[] charToBits(char character) {
         byte[] bits = new byte[8];
-        for (int i = 7; i >= 0; i--) {
+        for (int i = 0; i < 8; i++) {
             bits[i] = (byte) (character & 1);
             character >>= 1;
         }
         return bits;
     }
+
 
     public static byte[] charToBits(int character) {
         byte[] bits = new byte[8];
