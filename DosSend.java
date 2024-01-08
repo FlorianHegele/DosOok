@@ -133,52 +133,31 @@ public class DosSend {
      * Create and write the header of a wav file
      */
     public void writeWavHeader() {
+        // Vérification des paramètres
+        if (CHANNELS <= 0 || FECH <= 0 || FMT <= 0 || duree <= 0) {
+            System.out.println("Erreur : Paramètres invalides pour l'entête WAV.");
+            return;
+        }
+
         taille = (long) (FECH * duree);
         long nbBytes = taille * CHANNELS * FMT / 8;
 
         try {
-            outStream.write(new byte[]{'R', 'I', 'F', 'F'});
-
-            // Taille totale du fichier (en octets)
-            writeLittleEndian((int) (nbBytes + 36), 4, outStream);
-
-            // Format du fichier (WAVE)
-            outStream.write(new byte[]{'W', 'A', 'V', 'E'});
-
-            // Sous-entête Format
-            outStream.write(new byte[]{'f', 'm', 't', ' '});
-
-            // Taille du sous-entête Format (16 pour PCM)
-            writeLittleEndian(16, 4, outStream);
-
-            // Format audio (1 pour PCM)
-            writeLittleEndian(1, 2, outStream);
-
-            // Nombre de canaux audio (1 pour mono)
-            writeLittleEndian(CHANNELS, 2, outStream);
-
-            // Fréquence d'échantillonnage (en Hz)
-            writeLittleEndian(FECH, 4, outStream);
-
-            // Débit d'octets par seconde
-            writeLittleEndian(FECH * CHANNELS * FMT / 8, 4, outStream);
-
-            // Bloc d'octets par échantillon
-            writeLittleEndian(CHANNELS * FMT / 8, 2, outStream);
-
-            // Bits par échantillon
-            writeLittleEndian(FMT, 2, outStream);
-
-            // Sous-entête Data
-            outStream.write(new byte[]{'d', 'a', 't', 'a'});
-
-            // Taille des données (en octets)
-            writeLittleEndian((int) nbBytes, 4, outStream);
-            /*
-                À compléter
-            */
-        } catch (Exception e) {
-            System.out.printf(e.toString());
+            outStream.write(new byte[] { 'R', 'I', 'F', 'F' });
+            writeLittleEndian((int) (nbBytes + 36), 4, outStream); // File size - 8
+            outStream.write(new byte[] { 'W', 'A', 'V', 'E' });
+            outStream.write(new byte[] { 'f', 'm', 't', ' ' });
+            writeLittleEndian(16, 4, outStream); // Subchunk1Size
+            writeLittleEndian(1, 2, outStream); // AudioFormat (PCM)
+            writeLittleEndian(CHANNELS, 2, outStream); // NumChannels
+            writeLittleEndian(FECH, 4, outStream); // SampleRate
+            writeLittleEndian((FECH * FMT * CHANNELS) / 8, 4, outStream); // ByteRate
+            writeLittleEndian((FMT * CHANNELS) / 8, 2, outStream); // BlockAlign
+            writeLittleEndian(FMT, 2, outStream); // BitsPerSample
+            outStream.write(new byte[] { 'd', 'a', 't', 'a' });
+            writeLittleEndian((int) nbBytes, 4, outStream); // Subchunk2Size
+        } catch (IOException e) {
+            System.out.println("Erreur lors de l'écriture de l'entête WAV : " + e.toString());
         }
     }
 
@@ -220,24 +199,24 @@ public class DosSend {
      * @return byte array containing only 0 & 1
      */
     public byte[] charToBits(char[] chars) {
-            if (chars == null) {
-                System.out.println("Erreur : Le tableau de caractères est null.");
-                return new byte[0]; // Ou lancez une exception appropriée selon vos besoins.
-            }
+        if (chars == null) {
+            System.out.println("Erreur : Le tableau de caractères est null.");
+            return new byte[0]; // Ou lancez une exception appropriée selon vos besoins.
+        }
 
-            byte[] by = new byte[chars.length * 8];
+        byte[] by = new byte[chars.length * 8];
 
-            for (int i = 0; i < chars.length; i++) {
-                byte[] data = BitConversion.charToBits(chars[i]);
-                System.arraycopy(data, 0, by, i * 8, data.length);
-            }
+        for (int i = 0; i < chars.length; i++) {
+            byte[] data = BitConversion.charToBits(chars[i]);
+            System.arraycopy(data, 0, by, i * 8, data.length);
+        }
 
-            for (byte element : by) {
-                System.out.print(element + " ");
-            }
-            System.out.println();
+        for (byte element : by) {
+            System.out.print(element + " ");
+        }
+        System.out.println();
 
-            return by;
+        return by;
     }
 
 
@@ -247,31 +226,24 @@ public class DosSend {
      *
      * @param bits the data to modulate
      */
-    public void modulateData(byte[] bits) {
-        // Nombre d'échantillons par symbole
-        int samplesPerSymbol = FECH / BAUDS;
+    public void modulateData(byte[] bits){
+        int nbValues = (int) (FECH / BAUDS);
+        int seqLength = START_SEQ.length * nbValues;
+        dataMod = new double[seqLength + bits.length * nbValues];
 
-        // Nombre total d'échantillons nécessaires
-        int totalSamples = bits.length * samplesPerSymbol;
+        // Add synchronization sequence at the beginning
+        for (int i = 0; i < START_SEQ.length; i++) {
+            for (int j = 0; j < nbValues; j++) {
+                double t = (double) j / FECH;
+                dataMod[i * nbValues + j] = START_SEQ[i] == 1 ? Math.sin(2 * Math.PI * FP * t) : 0;
+            }
+        }
 
-        // Initialisation du tableau des données modulées
-        dataMod = new double[totalSamples];
-
-        // Fréquence de la porteuse en radian par échantillon
-        double omega = 2 * Math.PI * FP / FECH;
-
-        // Modulation d'amplitude par sauts (ASK)
+        // Modulate the data
         for (int i = 0; i < bits.length; i++) {
-            // Valeur du bit actuel
-            int bitValue = (bits[i] == 0) ? 0 : 1;
-
-            // Modulation de l'amplitude pour chaque échantillon du symbole
-            for (int j = 0; j < samplesPerSymbol; j++) {
-                // Indice de l'échantillon actuel
-                int index = i * samplesPerSymbol + j;
-
-                // Modulation d'amplitude en multipliant par la valeur du bit
-                dataMod[index] = bitValue * Math.sin(omega * index);
+            for (int j = 0; j < nbValues; j++) {
+                double t = (double) (j + START_SEQ.length * nbValues) / FECH;
+                dataMod[seqLength + i * nbValues + j] = bits[i] == 1 ? Math.sin(2 * Math.PI * FP * t) : 0;
             }
         }
     }
