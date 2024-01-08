@@ -86,7 +86,7 @@ public class DosSend {
     public static void main(String[] args) {
         // créé un objet DosSend
         DosSend dosSend = new DosSend("DosOok_message.wav");
-        dosSend.charToBits(new char[]{'A','Z','E','R','T','Y'});
+
         // lit le texte à envoyer depuis l'entrée standard
         // et calcule la durée de l'audio correspondant
         dosSend.duree = (double) (dosSend.readTextData() + dosSend.START_SEQ.length / 8) * 8.0 / dosSend.BAUDS;
@@ -106,7 +106,7 @@ public class DosSend {
         System.out.println();
 
         // exemple d'affichage du signal modulé dans une fenêtre graphique
-//        displaySig(dosSend.dataMod, 1000, 3000, "line", "Signal modulé");
+        displaySig(dosSend.dataMod, 1000, 3000, "line", "Signal modulé");
     }
 
     /**
@@ -138,6 +138,42 @@ public class DosSend {
 
         try {
             outStream.write(new byte[]{'R', 'I', 'F', 'F'});
+
+            // Taille totale du fichier (en octets)
+            writeLittleEndian((int) (nbBytes + 36), 4, outStream);
+
+            // Format du fichier (WAVE)
+            outStream.write(new byte[]{'W', 'A', 'V', 'E'});
+
+            // Sous-entête Format
+            outStream.write(new byte[]{'f', 'm', 't', ' '});
+
+            // Taille du sous-entête Format (16 pour PCM)
+            writeLittleEndian(16, 4, outStream);
+
+            // Format audio (1 pour PCM)
+            writeLittleEndian(1, 2, outStream);
+
+            // Nombre de canaux audio (1 pour mono)
+            writeLittleEndian(CHANNELS, 2, outStream);
+
+            // Fréquence d'échantillonnage (en Hz)
+            writeLittleEndian(FECH, 4, outStream);
+
+            // Débit d'octets par seconde
+            writeLittleEndian(FECH * CHANNELS * FMT / 8, 4, outStream);
+
+            // Bloc d'octets par échantillon
+            writeLittleEndian(CHANNELS * FMT / 8, 2, outStream);
+
+            // Bits par échantillon
+            writeLittleEndian(FMT, 2, outStream);
+
+            // Sous-entête Data
+            outStream.write(new byte[]{'d', 'a', 't', 'a'});
+
+            // Taille des données (en octets)
+            writeLittleEndian((int) nbBytes, 4, outStream);
             /*
                 À compléter
             */
@@ -212,34 +248,37 @@ public class DosSend {
      * @param bits the data to modulate
      */
     public void modulateData(byte[] bits) {
-        int nombreDeSymbole = FECH / BAUDS;
-        int symboleTotal = bits.length * nombreDeSymbole;
+        // Nombre d'échantillons par symbole
+        int samplesPerSymbol = FECH / BAUDS;
 
-        // Calculer la période d'un symbole en échantillons
-        int echantillonsParSymbole = FECH / BAUDS;
+        // Nombre total d'échantillons nécessaires
+        int totalSamples = bits.length * samplesPerSymbol;
 
-        // Initialiser le tableau pour les données modulées
-        dataMod = new double[symboleTotal * echantillonsParSymbole];
+        // Initialisation du tableau des données modulées
+        dataMod = new double[totalSamples];
 
-        // Moduler les données
+        // Fréquence de la porteuse en radian par échantillon
+        double omega = 2 * Math.PI * FP / FECH;
+
+        // Modulation d'amplitude par sauts (ASK)
         for (int i = 0; i < bits.length; i++) {
-            int bit = bits[i];
+            // Valeur du bit actuel
+            int bitValue = (bits[i] == 0) ? 0 : 1;
 
-            // Moduler chaque symbole
-            for (int j = 0; j < nombreDeSymbole; j++) {
-                // Calculer l'index dans le tableau des données modulées
-                int index = (i * nombreDeSymbole + j) * echantillonsParSymbole;
+            // Modulation de l'amplitude pour chaque échantillon du symbole
+            for (int j = 0; j < samplesPerSymbol; j++) {
+                // Indice de l'échantillon actuel
+                int index = i * samplesPerSymbol + j;
 
-                // Moduler l'échantillon en fonction du bit
-                double amplitude = (bit == 0) ? 0 : 1;  // Amplitude maximale si le bit est 1, 0 sinon
-
-                // Moduler l'amplitude de la porteuse à la fréquence FP
-                for (int k = 0; k < echantillonsParSymbole; k++) {
-                    double time = (double) k / FECH;
-                    dataMod[index + k] = amplitude * Math.sin(2 * Math.PI * FP * time);
-                }
+                // Modulation d'amplitude en multipliant par la valeur du bit
+                dataMod[index] = bitValue * Math.sin(omega * index);
             }
         }
     }
+
+
+
+
+
 
 }
