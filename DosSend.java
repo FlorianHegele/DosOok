@@ -1,10 +1,8 @@
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 public class DosSend {
@@ -34,7 +32,7 @@ public class DosSend {
         try {
             outStream = new FileOutputStream(file);
         } catch (Exception e) {
-            System.out.println("Erreur de création du fichier");
+            System.err.println("Erreur de création du fichier");
         }
     }
 
@@ -58,15 +56,32 @@ public class DosSend {
         StdDraw.setYscale(ArrayUtil.min(sig) * yPadding, ArrayUtil.max(sig) * yPadding);
         StdDraw.setXscale(Math.min(0, -(sig.length * xPadding - sig.length)), sig.length * xPadding);
 
+        start--;
+
+        if(start < -1) start = -1;
+        if(stop > sig.length) stop = sig.length;
+
+        if(start >= stop) {
+            start = -1;
+            stop = sig.length;
+        }
+
         if(mode.equals("line")) {
-            for(int i=1; i<sig.length; i++) {
+            for(int i=start+1; i<stop; i++) {
                 final int beforePoint = i-1;
                 StdDraw.line(beforePoint, sig[beforePoint], i, sig[i]);
             }
+        } else if(mode.equals("point")) {
+            for(int i=start+1; i<stop; i++) {
+                StdDraw.point(i, sig[i]);
+            }
+        } else {
+            System.err.println("Le mode ne peut être que line ou point");
         }
 
         StdDraw.show();
     }
+
 
     /**
      * Display signals in a window
@@ -78,9 +93,36 @@ public class DosSend {
      * @param title      the title of the window
      */
     public static void displaySig(List<double[]> listOfSigs, int start, int stop, String mode, String title) {
-      /*
-          À compléter
-      */
+        StdDraw.enableDoubleBuffering();
+        StdDraw.setTitle(title);
+
+        final double xPadding = 1.01;
+        final double yPadding = 1.5;
+
+        final int maxSize = ArrayUtil.maxSize(listOfSigs);
+
+        StdDraw.setCanvasSize(1280, 700);
+        StdDraw.setYscale(ArrayUtil.min(listOfSigs) * yPadding, ArrayUtil.max(listOfSigs) * yPadding);
+        StdDraw.setXscale(Math.min(0, -(maxSize * xPadding - maxSize)), maxSize * xPadding);
+
+        if(mode.equals("line")) {
+            listOfSigs.forEach(sig -> {
+                for(int i=1; i<sig.length; i++) {
+                    final int beforePoint = i-1;
+                    StdDraw.line(beforePoint, sig[beforePoint], i, sig[i]);
+                }
+            });
+        } else {
+            listOfSigs.forEach(sig -> {
+                for(int i=1; i<sig.length; i++) {
+                    final int beforePoint = i-1;
+                    StdDraw.line(beforePoint, sig[beforePoint], i, sig[i]);
+                }
+            });
+        }
+
+
+        StdDraw.show();
     }
 
     public static void main(String[] args) {
@@ -89,7 +131,7 @@ public class DosSend {
 
         // lit le texte à envoyer depuis l'entrée standard
         // et calcule la durée de l'audio correspondant
-        dosSend.duree = (double) (dosSend.readTextData() + dosSend.START_SEQ.length / 8) * 8.0 / dosSend.BAUDS;
+        dosSend.duree = (dosSend.readTextData() + START_SEQ.length / 8.0) * 8.0 / BAUDS;
 
         // génère le signal modulé après avoir converti les données en bits
         dosSend.modulateData(dosSend.charToBits(dosSend.dataChar));
@@ -106,7 +148,8 @@ public class DosSend {
         System.out.println();
 
         // exemple d'affichage du signal modulé dans une fenêtre graphique
-        displaySig(dosSend.dataMod, 1000, 3000, "line", "Signal modulé");
+        //displaySig(Collections.singletonList(dosSend.dataMod), 1000, 3000, "line", "Signal modulé");
+        //displaySig(dosSend.dataMod, 1000, 3000, "line", "Signal modulé");
     }
 
     /**
@@ -144,20 +187,20 @@ public class DosSend {
 
         try {
             outStream.write(new byte[] { 'R', 'I', 'F', 'F' });
-            writeLittleEndian((int) (nbBytes + 36), 4, outStream); // File size - 8
+            writeLittleEndian((int) (nbBytes + 36), 4, outStream);
             outStream.write(new byte[] { 'W', 'A', 'V', 'E' });
             outStream.write(new byte[] { 'f', 'm', 't', ' ' });
-            writeLittleEndian(16, 4, outStream); // Subchunk1Size
-            writeLittleEndian(1, 2, outStream); // AudioFormat (PCM)
-            writeLittleEndian(CHANNELS, 2, outStream); // NumChannels
-            writeLittleEndian(FECH, 4, outStream); // SampleRate
-            writeLittleEndian((FECH * FMT * CHANNELS) / 8, 4, outStream); // ByteRate
-            writeLittleEndian((FMT * CHANNELS) / 8, 2, outStream); // BlockAlign
-            writeLittleEndian(FMT, 2, outStream); // BitsPerSample
+            writeLittleEndian(16, 4, outStream);
+            writeLittleEndian(1, 2, outStream);
+            writeLittleEndian(CHANNELS, 2, outStream);
+            writeLittleEndian(FECH, 4, outStream);
+            writeLittleEndian((FECH * FMT * CHANNELS) / 8, 4, outStream);
+            writeLittleEndian((FMT * CHANNELS) / 8, 2, outStream);
+            writeLittleEndian(FMT, 2, outStream);
             outStream.write(new byte[] { 'd', 'a', 't', 'a' });
-            writeLittleEndian((int) nbBytes, 4, outStream); // Subchunk2Size
+            writeLittleEndian((int) nbBytes, 4, outStream);
         } catch (IOException e) {
-            System.out.println("Erreur lors de l'écriture de l'entête WAV : " + e.toString());
+            System.err.println("Erreur lors de l'écriture de l'entête WAV : " + e);
         }
     }
 
@@ -172,7 +215,7 @@ public class DosSend {
                 writeLittleEndian(normalizedElements, FMT / 8, outStream);
             }
         } catch (Exception e) {
-            System.out.println("Erreur d'écriture");
+            System.err.println("Erreur d'écriture");
         }
     }
 
@@ -190,36 +233,28 @@ public class DosSend {
     }
 
 
-
-
     /**
      * convert a char array to a bit array
      *
-     * @param chars
      * @return byte array containing only 0 & 1
      */
     public byte[] charToBits(char[] chars) {
         if (chars == null) {
-            System.out.println("Erreur : Le tableau de caractères est null.");
-            return new byte[0]; // Ou lancez une exception appropriée selon vos besoins.
+            System.err.println("Erreur : Le tableau de caractères est null.");
+            return new byte[0];
         }
 
-        byte[] by = new byte[chars.length * 8];
+        final byte[] by = new byte[chars.length * 8];
 
         for (int i = 0; i < chars.length; i++) {
-            byte[] data = BitConversion.charToBits(chars[i]);
+            final byte[] data = charToBits(chars[i]);
             System.arraycopy(data, 0, by, i * 8, data.length);
         }
-
-        for (byte element : by) {
-            System.out.print(element + " ");
-        }
-        System.out.println();
 
         return by;
     }
 
-
+    // TODO : Changer le nom de la variable dd
 
     /**
      * Modulate the data to send and apply the symbol throughput via BAUDS and FECH.
@@ -227,30 +262,36 @@ public class DosSend {
      * @param bits the data to modulate
      */
     public void modulateData(byte[] bits){
-        int nbValues = (FECH / BAUDS);
-        int seqLength = START_SEQ.length * nbValues;
-        dataMod = new double[seqLength + bits.length * nbValues];
+        final int valeur = (FECH / BAUDS);
+        final int taille = START_SEQ.length * valeur;
+        final double dd = 2 * Math.PI * FP / FECH;
+
+        dataMod = new double[taille + bits.length * valeur];
 
         // Add synchronization sequence at the beginning
         for (int i = 0; i < START_SEQ.length; i++) {
-            for (int j = 0; j < nbValues; j++) {
-                double t = (double) j / FECH;
-                dataMod[i * nbValues + j] = START_SEQ[i] == 1 ? Math.sin(2 * Math.PI * FP * t) : 0;
-            }
+            for (int j = 0; j < valeur; j++)
+                dataMod[i * valeur + j] = START_SEQ[i] == 1
+                        ? Math.sin(dd * j)
+                        : 0;
         }
 
         // Modulate the data
         for (int i = 0; i < bits.length; i++) {
-            for (int j = 0; j < nbValues; j++) {
-                double t = (double) (j + START_SEQ.length * nbValues) / FECH;
-                dataMod[seqLength + i * nbValues + j] = bits[i] == 1 ? Math.sin(2 * Math.PI * FP * t) : 0;
-            }
+            for (int j = 0; j < valeur; j++)
+                dataMod[taille + i * valeur + j] = bits[i] == 1
+                        ? Math.sin(dd * (j + START_SEQ.length * valeur))
+                        : 0;
         }
     }
 
-
-
-
-
+    private byte[] charToBits(char character) {
+        final byte[] bits = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            bits[i] = (byte) (character & 1);
+            character >>= 1;
+        }
+        return bits;
+    }
 
 }

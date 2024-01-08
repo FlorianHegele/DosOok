@@ -1,3 +1,5 @@
+import java.util.List;
+
 public class ArrayUtil {
 
     private ArrayUtil() {
@@ -20,6 +22,39 @@ public class ArrayUtil {
 
         for(int i=1; i<arr.length; i++) {
             final double x = arr[i];
+            if(max < x) max = x;
+        }
+
+        return max;
+    }
+
+    public static double min(List<double[]> arr) {
+        double min = min(arr.get(0));
+
+        for(int i=1; i<arr.size(); i++) {
+            final double x = min(arr.get(i));
+            if(min > x) min = x;
+        }
+
+        return min;
+    }
+
+    public static double max(List<double[]> arr) {
+        double max = max(arr.get(0));
+
+        for(int i=1; i<arr.size(); i++) {
+            final double x = max(arr.get(i));
+            if(max < x) max = x;
+        }
+
+        return max;
+    }
+
+    public static int maxSize(List<double[]> arr) {
+        int max = arr.get(0).length;
+
+        for(int i=1; i<arr.size(); i++) {
+            final int x = arr.get(i).length;
             if(max < x) max = x;
         }
 
