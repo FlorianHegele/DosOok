@@ -117,9 +117,11 @@ public class DosRead {
         dosRead.audioLPFilter(dosRead.sampleRate / FP); // 44
         displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
 
+
         // Resample audio data and apply a threshold to output only 0 & 1
         dosRead.audioResampleAndThreshold(dosRead.sampleRate / BAUDS, 9000);
         System.out.println(Arrays.toString(dosRead.outputBits));
+
 
         dosRead.decodeBitsToChar();
         if (dosRead.decodedChars != null) {
@@ -197,43 +199,18 @@ public class DosRead {
      * @param n the number of samples to average
      */
     public void audioLPFilter(int n) {
-        double[] filteredAudio = new double[audio.length];
-        double maxGain = 0;
-        int cutoffIndex = 0;
+        double[] filteredAudio = Arrays.copyOf(audio, audio.length);
 
-        for (int i = 0; i < filteredAudio.length; i++) {
-            // Calculer la moyenne glissante
-            double sum = 0;
-            final int debut = Math.max(0, i - n + 1);
-            final int fin = i + 1;
-            for (int j = debut; j < fin; j++) {
-                sum += audio[j];
-            }
+        for (int i = 0; i < audio.length; i++) {
+            int start = Math.max(0, i - n / 2);
+            int end = Math.min(audio.length, i + n / 2);
+            int count = end - start;
 
-            // Appliquer la moyenne
-            filteredAudio[i] = sum / (fin - debut);
-
-            // Calculer le gain du filtre passe-bas en utilisant la formule du log
-            double gain = Math.log10(Math.abs(audio[i]) / Math.abs(filteredAudio[i]));
-
-            // Trouver le gain maximal
-            if (gain > maxGain) {
-                maxGain = gain;
-                cutoffIndex = i;
-            }
+            double sum = Arrays.stream(Arrays.copyOfRange(audio, start, end)).sum();
+            filteredAudio[i] = sum / count;
         }
 
-        // Vérifier si gainmax - gaincalculé <= 3
-        if (maxGain - 3 <= 0) {
-            System.out.println("true");
-            // Ajuster la fréquence de coupure
-            for (int i = 0; i < audio.length; i++) {
-                if (i > cutoffIndex) {
-                    // Remplacer les valeurs par la moyenne uniquement si la valeur est supérieure à la fréquence de coupure
-                    audio[i] = (audio[i] + audio[cutoffIndex]) / 2.0;
-                }
-            }
-        }
+        audio = filteredAudio;
     }
 
     /**
