@@ -189,10 +189,11 @@ public class DosSend {
                 return new byte[0]; // Ou lancez une exception appropriée selon vos besoins.
             }
 
-            byte[] by = new byte[chars.length];
+            byte[] by = new byte[chars.length * 8];
 
             for (int i = 0; i < chars.length; i++) {
-                by[i] = (byte) chars[i];
+                byte[] data = BitConversion.charToBits(chars[i]);
+                System.arraycopy(data, 0, by, i * 8, data.length);
             }
 
             for (byte element : by) {

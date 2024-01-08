@@ -115,6 +115,7 @@ public class DosRead {
 
         // apply a low pass filter
         dosRead.audioLPFilter(dosRead.sampleRate / FP); // 44
+        //dosRead.audio = new LPFilter1().lpFilter(dosRead.audio, dosRead.sampleRate, 10000);
         displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
 
 
@@ -199,7 +200,7 @@ public class DosRead {
      * @param n the number of samples to average
      */
     public void audioLPFilter(int n) {
-        double[] filteredAudio = Arrays.copyOf(audio, audio.length);
+        double[] filteredAudio = new double[audio.length];
 
         for (int i = 0; i < audio.length; i++) {
             int start = Math.max(0, i - n / 2);
