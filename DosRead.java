@@ -66,6 +66,15 @@ public class DosRead {
      * @param title the title of the window
      */
     public static void displaySig(double[] sig, int start, int stop, String mode, String title) {
+        // Ensure start and stop values are within bounds
+        start = Math.max(0, start);
+        stop = Math.min(stop, sig.length);
+
+        if(start > stop) {
+            start = 0;
+            stop = sig.length;
+        }
+
         // Enable double buffering for faster graphics rendering
         StdDraw.enableDoubleBuffering();
 
@@ -73,25 +82,14 @@ public class DosRead {
 
         StdDraw.setCanvasSize(1280, 700);
 
-        // TODO : ADJUSTE XPADDING BY X LENGTH OF THE SIGNAL
         // Constants for adjusting the display
-        final double xPadding = 1.01;
         final double yPadding = 1.5;
 
         // Set the y-scale based on the signal's minimum and maximum values
         StdDraw.setYscale(ArrayUtil.min(sig) * yPadding, ArrayUtil.max(sig) * yPadding);
 
         // Set the x-scale based on the length of the signal
-        StdDraw.setXscale(Math.min(0, -(sig.length * xPadding - sig.length)), sig.length * xPadding);
-
-        // Ensure start and stop values are within bounds
-        if (start < 0) start = 0;
-        if (stop > sig.length) stop = sig.length;
-
-        if(start > stop) {
-            start = 0;
-            stop = sig.length;
-        }
+        StdDraw.setXscale(start, stop);
 
         // Handle the selected display mode
         if (mode.equals("line")) {
@@ -143,6 +141,7 @@ public class DosRead {
 
         // apply a low pass filter
         dosRead.audioLPFilter(dosRead.sampleRate / FP); // 44
+        //new LPFilter2().lpFilter(dosRead.audio, dosRead.sampleRate, FP * 0.1);
 
         // Resample audio data and apply a threshold to output only 0 & 1
         dosRead.audioResampleAndThreshold(dosRead.sampleRate / BAUDS, 9000);
@@ -154,7 +153,7 @@ public class DosRead {
             printIntArray(dosRead.decodedChars);
         }
 
-        displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
+        displaySig(dosRead.audio, 0, dosRead.audio.length, "line", "Signal audio");
 
         // Close the file input stream
         try {

@@ -1,12 +1,12 @@
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.io.IOException;
 
 public class DosSend {
+
     static final int FECH = 44100; // fréquence d'échantillonnage
     static final int FP = 1000;    // fréquence de la porteuses
     static final int BAUDS = 100;  // débit en symboles par seconde
@@ -46,6 +46,15 @@ public class DosSend {
      * @param title the title of the window
      */
     public static void displaySig(double[] sig, int start, int stop, String mode, String title) {
+        // Ensure start and stop values are within bounds
+        start = Math.max(0, start);
+        stop = Math.min(stop, sig.length);
+
+        if(start > stop) {
+            start = 0;
+            stop = sig.length;
+        }
+
         // Enable double buffering for faster graphics rendering
         StdDraw.enableDoubleBuffering();
 
@@ -54,23 +63,13 @@ public class DosSend {
         StdDraw.setCanvasSize(1280, 700);
 
         // Constants for adjusting the display
-        final double xPadding = 1.01;
         final double yPadding = 1.5;
 
         // Set the y-scale based on the signal's minimum and maximum values
         StdDraw.setYscale(ArrayUtil.min(sig) * yPadding, ArrayUtil.max(sig) * yPadding);
 
         // Set the x-scale based on the length of the signal
-        StdDraw.setXscale(Math.min(0, -(sig.length * xPadding - sig.length)), sig.length * xPadding);
-
-        // Ensure start and stop values are within bounds
-        if (start < 0) start = 0;
-        if (stop > sig.length) stop = sig.length;
-
-        if(start > stop) {
-            start = 0;
-            stop = sig.length;
-        }
+        StdDraw.setXscale(start, stop);
 
         // Handle the selected display mode
         if (mode.equals("line")) {
@@ -93,84 +92,63 @@ public class DosSend {
     }
 
 
-
-    /**
-     * Display signals in a window
-     *
-     * @param listOfSigs a list of the signals to display
-     * @param start      the first sample to display
-     * @param stop       the last sample to display
-     * @param mode       "line" or "point"
-     * @param title      the title of the window
-     */
     public static void displaySig(List<double[]> listOfSigs, int start, int stop, String mode, String title) {
         // Enable double buffering for faster graphics rendering
         StdDraw.enableDoubleBuffering();
 
         StdDraw.setTitle(title);
-
         StdDraw.setCanvasSize(1280, 700);
 
         // Constants for adjusting the display
         final double xPadding = 1.01;
         final double yPadding = 1.5;
 
-        // Find the maximum size among all signals in the list
+        // Calculate maxSize once
         final int maxSize = ArrayUtil.maxSize(listOfSigs);
 
+        // Calculate min and max values once
+        final double minValue = ArrayUtil.min(listOfSigs) * yPadding;
+        final double maxValue = ArrayUtil.max(listOfSigs) * yPadding;
 
         // Set the y-scale based on the minimum and maximum values among all signals
-        StdDraw.setYscale(ArrayUtil.min(listOfSigs) * yPadding, ArrayUtil.max(listOfSigs) * yPadding);
+        StdDraw.setYscale(minValue, maxValue);
 
         // Set the x-scale based on the maximum size of signals
         StdDraw.setXscale(Math.min(0, -(maxSize * xPadding - maxSize)), maxSize * xPadding);
 
         // Ensure start value is within bounds
-        if (start < 0) start = 0;
+        if (start < 0)
+            start = 0;
+
+        // Adjust stop value if it exceeds the signal length
+        stop = Math.min(stop, maxSize);
 
         // Handle the selected display mode
-        if (mode.equals("line")) {
-            // Draw a line between consecutive points for the "line" mode
-            for (double[] sig : listOfSigs) {
-                int tmp_start = start;
-                int tmp_stop = stop;
+        for (double[] sig : listOfSigs) {
+            int tmpStart = Math.min(start, sig.length - 1);
+            int tmpStop = Math.min(stop, sig.length);
 
-                // Adjust stop value if it exceeds the signal length
-                if (tmp_stop > sig.length) tmp_stop = sig.length;
+            // Reset start and stop values if they are invalid
+            if (tmpStart >= tmpStop) {
+                tmpStart = 0;
+                tmpStop = sig.length;
+            }
 
-                // Reset start and stop values if they are invalid
-                if (tmp_start >= tmp_stop) {
-                    tmp_start = 0;
-                    tmp_stop = sig.length;
-                }
-
-                for (int i = tmp_start + 1; i < tmp_stop; i++) {
+            if (mode.equals("line")) {
+                // Draw a line between consecutive points for the "line" mode
+                for (int i = tmpStart + 1; i < tmpStop; i++) {
                     final int beforePoint = i - 1;
                     StdDraw.line(beforePoint, sig[beforePoint], i, sig[i]);
                 }
-            }
-        } else if (mode.equals("point")) {
-            // Draw individual points for the "point" mode
-            for (double[] sig : listOfSigs) {
-                int tmp_start = start;
-                int tmp_stop = stop;
-
-                // Adjust stop value if it exceeds the signal length
-                if (tmp_stop > sig.length) tmp_stop = sig.length;
-
-                // Reset start and stop values if they are invalid
-                if (tmp_start >= tmp_stop) {
-                    tmp_start = 0;
-                    tmp_stop = sig.length;
-                }
-
-                for (int i = tmp_start; i < tmp_stop; i++) {
+            } else if (mode.equals("point")) {
+                // Draw individual points for the "point" mode
+                for (int i = tmpStart; i < tmpStop; i++) {
                     StdDraw.point(i, sig[i]);
                 }
+            } else {
+                // Handle invalid display modes
+                System.err.println("Mode can only be 'line' or 'point'");
             }
-        } else {
-            // Handle invalid display modes
-            System.err.println("Mode can only be 'line' or 'point'");
         }
 
         StdDraw.show();
@@ -200,8 +178,7 @@ public class DosSend {
         System.out.println();
 
         // exemple d'affichage du signal modulé dans une fenêtre graphique
-        //displaySig(Collections.singletonList(dosSend.dataMod), 1000, 3000, "line", "Signal modulé");
-        displaySig(dosSend.dataMod, 1000, -1, "line", "Signal modulé");
+        displaySig(Arrays.asList(dosSend.dataMod, dosSend.dataMod), 0, dosSend.dataMod.length, "line", "Signal modulé");
     }
 
     /**

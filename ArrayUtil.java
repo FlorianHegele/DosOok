@@ -6,6 +6,7 @@ public class ArrayUtil {
         throw new IllegalStateException("Utility class");
     }
 
+    // Returns the minimum value in an array of numbers
     public static double min(double[] arr) {
         double min = arr[0];
 
@@ -17,6 +18,7 @@ public class ArrayUtil {
         return min;
     }
 
+    // Returns the maximum value in an array of numbers
     public static double max(double[] arr) {
         double max = arr[0];
 
@@ -28,6 +30,7 @@ public class ArrayUtil {
         return max;
     }
 
+    // Returns the minimum value among all values in a list of arrays of numbers
     public static double min(List<double[]> arr) {
         double min = min(arr.get(0));
 
@@ -39,6 +42,7 @@ public class ArrayUtil {
         return min;
     }
 
+    // Returns the maximum value among all values in a list of arrays of numbers
     public static double max(List<double[]> arr) {
         double max = max(arr.get(0));
 
@@ -50,6 +54,7 @@ public class ArrayUtil {
         return max;
     }
 
+    // Returns the maximum size among all sizes of arrays in a list
     public static int maxSize(List<double[]> arr) {
         int max = arr.get(0).length;
 
@@ -59,10 +64,6 @@ public class ArrayUtil {
         }
 
         return max;
-    }
-
-    public static int getSequenceIndex() {
-        return -1;
     }
 
 }

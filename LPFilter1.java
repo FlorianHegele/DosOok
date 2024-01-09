@@ -3,7 +3,7 @@ import java.util.Arrays;
 public class LPFilter1 {
 
     public double[] lpFilter(double[] inputSignal, double sampleFreq, double cutoffFreq) {
-        final int n = (int) sampleFreq / DosRead.FP;
+        final int n = (int) (sampleFreq / cutoffFreq);
         final double[] filteredAudio = new double[inputSignal.length];
 
         for (int i = 0; i < inputSignal.length; i++) {
