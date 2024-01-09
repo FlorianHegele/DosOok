@@ -371,7 +371,7 @@ public class DosSend {
         // Loop through each bit of the character (from right to left)
         for (int i = 0; i < 8; i++) {
             // Copy the least significant bit of the character into the byte array
-                // Example -> 00100001
+            // Example -> 00100001
             //          & 00000001
             //            --------
             //            00000001 -> 1
