@@ -66,36 +66,42 @@ public class DosRead {
      * @param title the title of the window
      */
     public static void displaySig(double[] sig, int start, int stop, String mode, String title) {
+        // Enable double buffering for faster graphics rendering
         StdDraw.enableDoubleBuffering();
+
         StdDraw.setTitle(title);
 
+        StdDraw.setCanvasSize(1280, 700);
+
+        // Constants for adjusting the display
         final double xPadding = 1.01;
         final double yPadding = 1.5;
 
-        StdDraw.setCanvasSize(1280, 700);
+        // Set the y-scale based on the signal's minimum and maximum values
         StdDraw.setYscale(ArrayUtil.min(sig) * yPadding, ArrayUtil.max(sig) * yPadding);
+
+        // Set the x-scale based on the length of the signal
         StdDraw.setXscale(Math.min(0, -(sig.length * xPadding - sig.length)), sig.length * xPadding);
 
-        if(start < 0) start = 0;
-        if(stop > sig.length) stop = sig.length;
+        // Ensure start and stop values are within bounds
+        if (start < 0) start = 0;
+        if (stop > sig.length) stop = sig.length;
 
-        if(start >= stop) {
-            start = 0;
-            stop = sig.length;
-        }
-
-        if(mode.equals("line")) {
-            for(int i=start+1; i<stop; i++) {
-                final int beforePoint = i-1;
+        // Handle the selected display mode
+        if (mode.equals("line")) {
+            // Draw a line between consecutive points for the "line" mode
+            for (int i = start + 1; i < stop; i++) {
+                final int beforePoint = i - 1;
                 StdDraw.line(beforePoint, sig[beforePoint], i, sig[i]);
             }
-        } else if(mode.equals("point")) {
-            start--;
-            for(int i=start+1; i<stop; i++) {
+        } else if (mode.equals("point")) {
+            // Draw individual points for the "point" mode
+            for (int i = start; i < stop; i++) {
                 StdDraw.point(i, sig[i]);
             }
         } else {
-            System.err.println("Le mode ne peut être que line ou point");
+            // Handle invalid display modes
+            System.err.println("Mode can only be 'line' or 'point'");
         }
 
         StdDraw.show();
