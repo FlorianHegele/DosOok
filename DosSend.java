@@ -67,6 +67,11 @@ public class DosSend {
         if (start < 0) start = 0;
         if (stop > sig.length) stop = sig.length;
 
+        if(start > stop) {
+            start = 0;
+            stop = sig.length;
+        }
+
         // Handle the selected display mode
         if (mode.equals("line")) {
             // Draw a line between consecutive points for the "line" mode
@@ -196,7 +201,7 @@ public class DosSend {
 
         // exemple d'affichage du signal modulé dans une fenêtre graphique
         //displaySig(Collections.singletonList(dosSend.dataMod), 1000, 3000, "line", "Signal modulé");
-        //displaySig(dosSend.dataMod, 1000, 3000, "line", "Signal modulé");
+        displaySig(dosSend.dataMod, 1000, -1, "line", "Signal modulé");
     }
 
     /**

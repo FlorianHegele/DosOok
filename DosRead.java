@@ -73,6 +73,7 @@ public class DosRead {
 
         StdDraw.setCanvasSize(1280, 700);
 
+        // TODO : ADJUSTE XPADDING BY X LENGTH OF THE SIGNAL
         // Constants for adjusting the display
         final double xPadding = 1.01;
         final double yPadding = 1.5;
@@ -86,6 +87,11 @@ public class DosRead {
         // Ensure start and stop values are within bounds
         if (start < 0) start = 0;
         if (stop > sig.length) stop = sig.length;
+
+        if(start > stop) {
+            start = 0;
+            stop = sig.length;
+        }
 
         // Handle the selected display mode
         if (mode.equals("line")) {
@@ -137,8 +143,6 @@ public class DosRead {
 
         // apply a low pass filter
         dosRead.audioLPFilter(dosRead.sampleRate / FP); // 44
-        //dosRead.audio = new LPFilter1().lpFilter(dosRead.audio, dosRead.sampleRate, 10000);
-        displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
 
         // Resample audio data and apply a threshold to output only 0 & 1
         dosRead.audioResampleAndThreshold(dosRead.sampleRate / BAUDS, 9000);
@@ -149,6 +153,8 @@ public class DosRead {
             System.out.print("Message décodé : ");
             printIntArray(dosRead.decodedChars);
         }
+
+        displaySig(dosRead.audio, 0, dosRead.audio.length - 1, "line", "Signal audio");
 
         // Close the file input stream
         try {
